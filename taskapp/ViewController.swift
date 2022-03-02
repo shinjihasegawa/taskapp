@@ -8,8 +8,9 @@
 import UIKit
 import RealmSwift   // ←追加
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource  {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource,UISearchBarDelegate  {
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var search: UISearchBar!
     
     // Realmインスタンスを取得する
     let realm = try! Realm()  // ←追加
@@ -26,6 +27,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.fillerRowHeight = UITableView.automaticDimension
         tableView.delegate = self
         tableView.dataSource = self
+        search.delegate = self
     }
     //データの数（＝セルの数）を返すメソッド
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -54,7 +56,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     // 各セルを選択した時に実行されるメソッド
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        performSegue(withIdentifier: "cellSegue",sender: nil) // ←追加する
+        performSegue(withIdentifier: "CellSegue",sender: nil) // ←追加する
     }
     
     // セルが削除が可能なことを伝えるメソッド
@@ -78,7 +80,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let inputViewController:InputViewController = segue.destination as! InputViewController
         
-        if segue.identifier == "CellSague"{
+        if segue.identifier == "CellSegue"{
             let indexPath = self.tableView.indexPathForSelectedRow
             inputViewController.task = taskArray[indexPath!.row]
         }else{
@@ -97,5 +99,27 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         super.viewWillAppear(animated)
         tableView.reloadData()
     }
+    
+    var items = try! Realm().objects(Task.self)
+    var currentItems = try! Realm().objects(Task.self)
+    
+    func setupSearchBar(){
+        search.delegate = self
+    }
+    
+    
+    func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
+    }
+    //  検索バーに入力があったら呼ばれる
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        guard !searchText.isEmpty else {
+            currentItems = items
+            tableView.reloadData()
+            return
+        }
+        taskArray = realm.objects(Task.self).filter("category = \(searchText)")
+        tableView.reloadData()
+    }
+    
     
 }
