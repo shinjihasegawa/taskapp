@@ -10,7 +10,7 @@ import RealmSwift   // ←追加
 
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource,UISearchBarDelegate  {
     @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var search: UISearchBar!
+    @IBOutlet weak var searchbar: UISearchBar!
     
     // Realmインスタンスを取得する
     let realm = try! Realm()  // ←追加
@@ -27,7 +27,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.fillerRowHeight = UITableView.automaticDimension
         tableView.delegate = self
         tableView.dataSource = self
-        search.delegate = self
+        searchbar.delegate = self
     }
     //データの数（＝セルの数）を返すメソッド
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -100,24 +100,17 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.reloadData()
     }
     
-    var items = try! Realm().objects(Task.self)
-    var currentItems = try! Realm().objects(Task.self)
-    
-    func setupSearchBar(){
-        search.delegate = self
-    }
-    
-    
-    func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
-    }
     //  検索バーに入力があったら呼ばれる
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        guard !searchText.isEmpty else {
-            currentItems = items
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchbarText: String) {
+        guard !searchbarText.isEmpty else {
+            taskArray = realm.objects(Task.self)
             tableView.reloadData()
             return
         }
-        taskArray = realm.objects(Task.self).filter("category = \(searchText)")
+        
+        // NSPredicateを使って検索条件を指定します
+        let predicate = NSPredicate(format: "category = %@",searchbarText)
+        taskArray = realm.objects(Task.self).filter(predicate)
         tableView.reloadData()
     }
     
